@@ -1,57 +1,36 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  let inputName: HTMLInputElement;
+  import { fly, fade } from "svelte/transition";
+  import { cubicOut } from "svelte/easing";
 
-  type Child = { name: string; tally: number };
-  let childList: Child[] = $state([]);
-  onMount(async () => {
-    inputName.focus();
-    const res = await fetch(
-      "https://advent.sveltesociety.dev/data/2023/day-one.json"
-    );
-    childList = await res.json();
-  });
+  let santasCounter = $state(0);
 
   function handleSubmit(
     e: SubmitEvent & { currentTarget: EventTarget & HTMLFormElement }
-  ) {
+  ): any {
     e.preventDefault();
-    const child: Child = { name: "", tally: NaN };
-    const form = new FormData(e.currentTarget);
-    for (const [k, v] of form.entries()) {
-      if (k === "name") child.name = v.toString();
-      if (k === "tally") child.tally = +v;
-    }
-    childList.unshift(child);
-    e.currentTarget.reset();
-    inputName.focus();
+    santasCounter++;
+  }
+
+  function handleReset(
+    e: Event & { currentTarget: EventTarget & HTMLFormElement }
+  ): any {
+    e.preventDefault();
+    santasCounter = 0;
   }
 </script>
 
-<form onsubmit={(e) => handleSubmit(e)}>
-  <input
-    type="text"
-    name="name"
-    placeholder="Fill the name"
-    bind:this={inputName}
-  />
-  <input type="number" name="tally" placeholder="Fill the tally" />
-  <button type="submit">Submit</button>
+<div>
+  {#key santasCounter}
+    <h1 in:fly={{ x: 20, duration: 200 }}>
+      {santasCounter}
+    </h1>
+  {/key}
+</div>
+
+<form onsubmit={(e) => handleSubmit(e)} onreset={(e) => handleReset(e)}>
+  <button type="submit">Add</button>
+  <button type="reset">Reset</button>
 </form>
 
-{#each childList as child, i}
-  <p class={child.tally > 0 ? "kind" : "naughty"}>
-    {child.name}
-    {child.tally}
-  </p>
-{/each}
-
 <style>
-  .kind {
-    color: rebeccapurple;
-  }
-  .naughty {
-    color: red;
-    text-decoration: line-through;
-  }
 </style>
